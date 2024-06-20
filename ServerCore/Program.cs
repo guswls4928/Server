@@ -1,37 +1,50 @@
 ﻿using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace ServerCore
 {
     class Program
     {
-        volatile static bool _stop = false;
+        static Listner _listner = new Listner();
 
-        static void ThreadMain()
+        static void OnAcceptHandler(Socket clientSocket)
         {
-            Console.WriteLine("Thread is started");
-            while (!_stop)
+            try
             {
+                Session session = new Session();
+                session.Start(clientSocket);
 
+                byte[] sendBuff = Encoding.UTF8.GetBytes("Welcome to Server!");
+                session.Send(sendBuff);
+
+                Thread.Sleep(1000);
+
+                session.DisConnect();
+                session.DisConnect();
             }
-            Console.WriteLine("Thread is stopped");
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         static void Main(string[] args)
         {
-            Task t = new Task(ThreadMain);
-            t.Start();
+            string host = Dns.GetHostName();
+            IPHostEntry ipHost = Dns.GetHostEntry(host);
+            IPAddress ipAddr = ipHost.AddressList[0];
+            IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
-            Thread.Sleep(1000);
+            _listner.Init(endPoint, OnAcceptHandler);
+            Console.WriteLine("Listening...");
 
-            _stop = true;
-
-            Console.WriteLine("stop 호출");
-            Console.WriteLine("종료 대기중");
-
-            t.Wait();
-
-            Console.WriteLine("종료 완료");
+            while (true)
+            {
+                
+            }
         }
     }
 }
