@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ServerCore
 {
-    internal class Listner
+    public class Listner
     {
         Socket _listenSocket;
         Func<Session> _sessionFactory;
@@ -20,12 +20,9 @@ namespace ServerCore
 
             _listenSocket.Listen(10);
 
-            for (int i = 0; i < 10; i++)
-            {
-                SocketAsyncEventArgs args = new SocketAsyncEventArgs();
-                args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
-                RegisterAccept(args);
-            }
+            SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+            args.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
+            RegisterAccept(args);
         }
 
         void RegisterAccept(SocketAsyncEventArgs args)
