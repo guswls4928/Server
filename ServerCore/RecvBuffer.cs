@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
-    internal class RecvBuffer
+    public class RecvBuffer
     {
         ArraySegment<byte> _buffer;
         int _readPos;
