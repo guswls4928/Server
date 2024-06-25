@@ -14,7 +14,6 @@ namespace DummyClient
     {
         public long playerId;
     }
-    
     class PlayerInfoOk : Packet
     {
         public int hp;
@@ -40,8 +39,9 @@ namespace DummyClient
                 ArraySegment<byte> s = SendBufferHelper.Open(4096);
 
                 ushort count = 0;
-                bool success = false;
-                 
+                bool success = true;
+
+                //success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), packet.size);
                 count += 2;
                 success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), packet.packetId);
                 count += 2;

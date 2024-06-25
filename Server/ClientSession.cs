@@ -1,10 +1,5 @@
 ﻿using ServerCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Server
 {
@@ -66,7 +61,6 @@ namespace Server
                     {
                         long playerId = BitConverter.ToInt64(buffer.Array, buffer.Offset + count);
                         count += 8;
-
                         Console.WriteLine($"PlayerInfoReq: {playerId}");
                     }
                     break;
