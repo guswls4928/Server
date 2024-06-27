@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Xml;
 
 namespace PacketGenerator
@@ -11,7 +12,7 @@ namespace PacketGenerator
 
         static void Main(string[] args)
         {
-            string pdlPath = "PDL.xml";
+            string pdlPath = "../PDL.xml";
 
             XmlReaderSettings settings = new XmlReaderSettings()
             {
@@ -22,7 +23,7 @@ namespace PacketGenerator
             if (args.Length >= 1)
                 pdlPath = args[0];
 
-            using (XmlReader r = XmlReader.Create("PDL.xml", settings))
+            using (XmlReader r = XmlReader.Create(pdlPath, settings))
             {
                 r.MoveToContent();
 
