@@ -9,6 +9,7 @@ namespace PacketGenerator
         public static string fileFormat =
 @"using System;
 using System.Text;
+using ServerCore;
 
 public enum PacketID
 {{
