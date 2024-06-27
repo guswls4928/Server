@@ -6,14 +6,21 @@ namespace PacketGenerator
     class Program
     {
         static string genPackets;
+        static ushort packetId;
+        static string packetEnums;
 
         static void Main(string[] args)
         {
+            string pdlPath = "PDL.xml";
+
             XmlReaderSettings settings = new XmlReaderSettings()
             {
                 IgnoreComments = true,
                 IgnoreWhitespace = true
             };
+
+            if (args.Length >= 1)
+                pdlPath = args[0];
 
             using (XmlReader r = XmlReader.Create("PDL.xml", settings))
             {
@@ -27,7 +34,8 @@ namespace PacketGenerator
                     Console.WriteLine(r.Name + " " + r["name"]);
                 }
 
-                File.WriteAllText("GenPackets.cs", genPackets);
+                string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
+                File.WriteAllText("GenPackets.cs", fileText);
             }
         }
 
@@ -51,6 +59,7 @@ namespace PacketGenerator
 
             Tuple<string, string, string>  t = ParseMembers(r);
             genPackets += string.Format(PacketFormat.packetFormat, packetName, t.Item1, t.Item2, t.Item3);
+            packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
         }
 
         public static Tuple<string, string, string> ParseMembers(XmlReader r)
@@ -75,23 +84,26 @@ namespace PacketGenerator
                 }
 
                 if (!string.IsNullOrEmpty(memberCode))
-                {
                     memberCode += Environment.NewLine;
-                }
                 if (!string.IsNullOrEmpty(readCode))
-                {
                     readCode += Environment.NewLine;
-                }
                 if (!string.IsNullOrEmpty(writeCode))
-                {
                     writeCode += Environment.NewLine;
-                }
 
                 string memberType = r.Name.ToLower();
                 switch (memberType)
                 {
                     case "bool":
                     case "byte":
+                        memberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
+                        readCode += string.Format(PacketFormat.readByteFormat, memberName, memberType);
+                        writeCode += string.Format(PacketFormat.writeByteFormat, memberName, memberType);
+                        break;
+                    case "sbyte":
+                        memberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
+                        readCode += string.Format(PacketFormat.readByteFormat, memberName, memberType);
+                        writeCode += string.Format(PacketFormat.writeByteFormat, memberName, memberType);
+                        break;
                     case "short":
                     case "int":
                     case "long":
@@ -159,8 +171,6 @@ namespace PacketGenerator
             {
                 case "bool":
                     return "ToBoolean";
-                case "byte":
-                    return "ToByte";
                 case "short":
                     return "ToInt16";
                 case "ushort":
