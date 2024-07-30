@@ -93,7 +93,7 @@ public class C_LeaveGame : IPacket
 
 	public ArraySegment<byte> Write()
 	{
-		ArraySegment<byte> segment = SendBufferHelper.Open(4096);
+		ArraySegment<byte> segment = SendBufferHelper.Open(65535);
 		ushort count = 0;
 		bool success = true;
 
@@ -129,7 +129,7 @@ public class S_BroadcastLeaveGame : IPacket
 
 	public ArraySegment<byte> Write()
 	{
-		ArraySegment<byte> segment = SendBufferHelper.Open(4096);
+		ArraySegment<byte> segment = SendBufferHelper.Open(65535);
 		ushort count = 0;
 		bool success = true;
 
@@ -211,7 +211,7 @@ public class S_PlayerList : IPacket
 
 	public ArraySegment<byte> Write()
 	{
-		ArraySegment<byte> segment = SendBufferHelper.Open(4096);
+		ArraySegment<byte> segment = SendBufferHelper.Open(65535 );
 		ushort count = 0;
 		bool success = true;
 
