@@ -149,7 +149,11 @@ public class NewBehaviourScript : CreatureController
         GameObject go = Managers.Object.Find(GetFrontCellPos());
         if (go != null)
         {
-            Debug.Log(go.name);
+            CreatureController cc = go.GetComponent<CreatureController>();
+            if (cc != null)
+            {
+                cc.OnDamaged();
+            }
         }
 
         _rangedAttack = false;
