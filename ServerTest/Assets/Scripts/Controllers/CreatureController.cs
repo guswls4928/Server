@@ -11,8 +11,8 @@ public class CreatureController : MonoBehaviour
     protected Animator _animator;
     protected SpriteRenderer _sprite;
 
-    CreatureState _state = CreatureState.Idle;
-    public CreatureState State
+    protected CreatureState _state = CreatureState.Idle;
+    public virtual CreatureState State
     {
         get { return _state; }
         set
@@ -169,45 +169,17 @@ public class CreatureController : MonoBehaviour
                 UpdateMoving();
                 break;
             case CreatureState.Attack:
+                UpdateAttack();
                 break;
             case CreatureState.Dead:
+                UpdateDead();
                 break;
         }
     }
 
     protected virtual void UpdateIdle()
     {
-        if (_dir != MoveDir.None)
-        {
-            Vector3Int dest = CellPos;
-
-            switch (_dir)
-            {
-                case MoveDir.Up:
-                    dest += Vector3Int.up;
-                    break;
-                case MoveDir.Down:
-                    dest += Vector3Int.down;
-                    break;
-                case MoveDir.Left:
-                    dest += Vector3Int.left;
-                    break;
-                case MoveDir.Right:
-                    dest += Vector3Int.right;
-                    break;
-
-            }
-
-            State = CreatureState.Moving;
-
-            if (Managers.Map.CanGo(dest))
-            {
-                if (Managers.Object.Find(dest) == null)
-                {
-                    CellPos = dest;
-                }
-            }
-        }
+        
     }
 
     protected virtual void UpdateMoving()
@@ -219,14 +191,48 @@ public class CreatureController : MonoBehaviour
         if (dist < _speed * Time.deltaTime)
         {
             transform.position = dest;
-            _state = CreatureState.Idle;
-            if (_dir == MoveDir.None)
-                UpdateAnimation();
+            MoveToNextPos();
         }
         else
         {
             transform.position += moveDir.normalized * _speed * Time.deltaTime;
             State = CreatureState.Moving;
+        }
+    }
+
+    protected virtual void MoveToNextPos()
+    {
+        if (_dir == MoveDir.None)
+        {
+            State = CreatureState.Idle;
+            return;
+        }
+
+        Vector3Int dest = CellPos;
+
+        switch (_dir)
+        {
+            case MoveDir.Up:
+                dest += Vector3Int.up;
+                break;
+            case MoveDir.Down:
+                dest += Vector3Int.down;
+                break;
+            case MoveDir.Left:
+                dest += Vector3Int.left;
+                break;
+            case MoveDir.Right:
+                dest += Vector3Int.right;
+                break;
+
+        }
+
+        if (Managers.Map.CanGo(dest))
+        {
+            if (Managers.Object.Find(dest) == null)
+            {
+                CellPos = dest;
+            }
         }
     }
 

@@ -93,7 +93,6 @@ public class NewBehaviourScript : CreatureController
         {
             case CreatureState.Idle:
                 GetDirInput();
-                GetIdleInput();
                 break;
             case CreatureState.Moving:
                 GetDirInput();
@@ -108,6 +107,22 @@ public class NewBehaviourScript : CreatureController
     private void LateUpdate()
     {
         Camera.main.transform.position = new Vector3(transform.position.x, transform.position.y, -10);
+    }
+
+    protected override void UpdateIdle()
+    {
+        if (Dir != MoveDir.None)
+        {
+            State = CreatureState.Moving;
+            return;
+        }
+
+        if (Input.GetMouseButton(0))
+        {
+            State = CreatureState.Attack;
+            //_coAttack = StartCoroutine(CoAttack());
+            _coAttack = StartCoroutine(CoAttackArrow());
+        }
     }
 
     void GetDirInput()
@@ -131,16 +146,6 @@ public class NewBehaviourScript : CreatureController
         else
         {
             Dir = MoveDir.None;
-        }
-    }
-
-    void GetIdleInput()
-    {
-        if (Input.GetMouseButton(0))
-        {
-            State = CreatureState.Attack;
-            //_coAttack = StartCoroutine("CoAttack");
-            _coAttack = StartCoroutine("CoAttackArrow");
         }
     }
 
