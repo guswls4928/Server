@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static Define;
 
-public class NewBehaviourScript : CreatureController
+public class PlayerController : CreatureController
 {
     Coroutine _coAttack;
     bool _rangedAttack = false;

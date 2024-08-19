@@ -1,119 +1,165 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using static Define;
 
 public class MonsterController : CreatureController
 {
-    Coroutine _coPatrol;
-    Vector3Int _destCellPos;
+	Coroutine _coPatrol;
+	Coroutine _coSearch;
 
-    public override CreatureState State
-    {
-        get { return _state; }
-        set
-        {
-            if (_state == value)
-                return;
+	[SerializeField]
+	Vector3Int _destCellPos;
 
-            base.State = value;
+	[SerializeField]
+	GameObject _target;
 
-            if (_coPatrol != null)
-            {
-                StopCoroutine(_coPatrol);
-                _coPatrol = null;
-            }
-        }
-    }
+	[SerializeField]
+	float _searchRange = 5.0f;
 
-    protected override void Init()
-    {
-        base.Init();
+	public override CreatureState State
+	{
+		get { return _state; }
+		set
+		{
+			if (_state == value)
+				return;
 
-        State = CreatureState.Idle;
-        Dir = MoveDir.None;
-    }
+			base.State = value;
 
-    protected override void UpdateIdle()
-    {
-        base.UpdateIdle();
+			if (_coPatrol != null)
+			{
+				StopCoroutine(_coPatrol);
+				_coPatrol = null;
+			}
 
-        if (_coPatrol == null)
-            _coPatrol = StartCoroutine(CoPatrol());
-    }
+			if (_coSearch != null)
+			{
+				StopCoroutine(_coSearch);
+				_coSearch = null;
+			}
+		}
+	}
 
-    protected override void MoveToNextPos()
-    {
-        Vector3Int moveCellDir = _destCellPos - CellPos;
-        if (moveCellDir.x > 0)
-            Dir = MoveDir.Right;
-        else if (moveCellDir.x < 0)
-            Dir = MoveDir.Left;
-        else if (moveCellDir.y > 0)
-            Dir = MoveDir.Up;
-        else if (moveCellDir.y < 0)
-            Dir = MoveDir.Down;
-        else Dir = MoveDir.None;
+	protected override void Init()
+	{
+		base.Init();
 
-        Vector3Int dest = CellPos;
+		State = CreatureState.Idle;
+		Dir = MoveDir.None;
 
-        switch (_dir)
-        {
-            case MoveDir.Up:
-                dest += Vector3Int.up;
-                break;
-            case MoveDir.Down:
-                dest += Vector3Int.down;
-                break;
-            case MoveDir.Left:
-                dest += Vector3Int.left;
-                break;
-            case MoveDir.Right:
-                dest += Vector3Int.right;
-                break;
+		_speed = 3.0f;
+	}
 
-        }
+	protected override void UpdateIdle()
+	{
+		base.UpdateIdle();
 
-        if (Managers.Map.CanGo(dest) && Managers.Object.Find(dest) == null)
-        {
-            CellPos = dest;
-        }
-        else
-        {
-            State = CreatureState.Idle;
-        }
-    }
+		if (_coPatrol == null)
+		{
+			_coPatrol = StartCoroutine("CoPatrol");
+		}
 
-    public override void OnDamaged()
-    {
-        GameObject effect = Managers.Resource.Instantiate("Effect/DieEffect");
-        effect.transform.position = transform.position;
-        effect.GetComponent<Animator>().Play("START");
-        Destroy(effect, 0.5f);
+		if (_coSearch == null)
+		{
+			_coSearch = StartCoroutine("CoSearch");
+		}
+	}
 
-        Managers.Object.Remove(gameObject);
-        Managers.Resource.Destroy(gameObject);
-    }
+	protected override void MoveToNextPos()
+	{
+		Vector3Int destPos = _destCellPos;
+		if (_target != null)
+		{
+			destPos = _target.GetComponent<CreatureController>().CellPos;
+		}
 
-    IEnumerator CoPatrol()
-    {
-        int waitSeconds = Random.Range(1, 4);
-        yield return new WaitForSeconds(waitSeconds);
+		List<Vector3Int> path = Managers.Map.FindPath(CellPos, destPos, ignoreDestCollision: true);
+		if (path.Count < 2 || (_target != null && path.Count > 10))
+		{
+			_target = null;
+			State = CreatureState.Idle;
+			return;
+		}
 
-        for (int i = 0; i < 10; i++)
-        {
-            int xRange = Random.Range(-5, 6);
-            int yRange = Random.Range(-5, 6);
-            Vector3Int randPos = CellPos + new Vector3Int(xRange, yRange, 0);
+		Vector3Int nextPos = path[1];
+		Vector3Int moveCellDir = nextPos - CellPos;
 
-            if (Managers.Map.CanGo(randPos) && Managers.Object.Find(randPos) == null)
-            {
-                _destCellPos = randPos;
-                State = CreatureState.Moving;
-                yield break;
-            }
-        }
+		if (moveCellDir.x > 0)
+			Dir = MoveDir.Right;
+		else if (moveCellDir.x < 0)
+			Dir = MoveDir.Left;
+		else if (moveCellDir.y > 0)
+			Dir = MoveDir.Up;
+		else if (moveCellDir.y < 0)
+			Dir = MoveDir.Down;
+		else
+			Dir = MoveDir.None;
 
-        State = CreatureState.Idle;
-    }
+		if (Managers.Map.CanGo(nextPos) && Managers.Object.Find(nextPos) == null)
+		{
+			CellPos = nextPos;
+		}
+		else
+		{
+			State = CreatureState.Idle;
+		}
+	}
+
+	public override void OnDamaged()
+	{
+		GameObject effect = Managers.Resource.Instantiate("Effect/DieEffect");
+		effect.transform.position = transform.position;
+		effect.GetComponent<Animator>().Play("START");
+		GameObject.Destroy(effect, 0.5f);
+
+		Managers.Object.Remove(gameObject);
+		Managers.Resource.Destroy(gameObject);
+	}
+
+	IEnumerator CoPatrol()
+	{
+		int waitSeconds = Random.Range(1, 4);
+		yield return new WaitForSeconds(waitSeconds);
+
+		for (int i = 0; i < 10; i++)
+		{
+			int xRange = Random.Range(-5, 6);
+			int yRange = Random.Range(-5, 6);
+			Vector3Int randPos = CellPos + new Vector3Int(xRange, yRange, 0);
+
+			if (Managers.Map.CanGo(randPos) && Managers.Object.Find(randPos) == null)
+			{
+				_destCellPos = randPos;
+				State = CreatureState.Moving;
+				yield break;
+			}
+		}
+
+		State = CreatureState.Idle;
+	}
+
+	IEnumerator CoSearch()
+	{
+		while (true)
+		{
+			yield return new WaitForSeconds(1);
+
+			if (_target != null)
+				continue;
+
+			_target = Managers.Object.Find((go) =>
+			{
+				PlayerController pc = go.GetComponent<PlayerController>();
+				if (pc == null)
+					return false;
+
+				Vector3Int dir = (pc.CellPos - CellPos);
+				if (dir.magnitude > _searchRange)
+					return false;
+
+				return true;
+			});
+		}
+	}
 }
